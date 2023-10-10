@@ -1,12 +1,8 @@
-import dotenv from 'dotenv';
 import axios from 'axios';
 import fs from 'fs';
 import { graphQlQueryToJson } from 'graphql-query-to-json'; //npm install graphql-query-to-json
 import { jsonToGraphQLQuery } from 'json-to-graphql-query'; //npm install json-to-graphql-query
 
-  dotenv.config();
-
-  const tokenPred = process.env.TOKEN;
 
   // Supuestos: SOLO EXISTEN ARRAYS EN NODES, No se contempla un array en otro sitio
   // CUANDO UN OBJETO TIENE COMO PROPIEDAD NODES SE CONSIDERA UN META OBJETOç
@@ -92,7 +88,8 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; //npm install json-t
 
 
   // Public function ------------------------------------------------------------------------------------
-  export async function githubGQLPaginator(query){
+  export async function githubGQLPaginator(query, token){
+    tokenPred = token;
     originalQuery = query;
 
     const result = await requestQuery(query);
@@ -128,6 +125,8 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; //npm install json-t
 
   // Global variables ------------------------------------------------------------------------------------
   var originalQuery = "";
+
+  var tokenPred = "";
 
   var mtypePath = [];
 
@@ -322,5 +321,3 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; //npm install json-t
       throw new Error(`Error en la solicitud: ${error.message}`);
     }
   }
-
-    
