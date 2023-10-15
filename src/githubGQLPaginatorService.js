@@ -8,9 +8,15 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-
   // PAGEABLE TYPES ARE NOT CONTEMPLATED IN A SIMPLE TYPE
 
   // Public function --------------------------------------------------------------------------------------------------
-  export async function githubGQLPaginator(query, token){
+  export async function GQLPaginator(query, token){
     tokenPred = token;
     originalQuery = query;
+
+    if (token.substring(0, 2) === "gh") {
+      platformConfig = "github";
+    } else if(token.substring(0, 2) === "zh") {
+      platformConfig = "zenhub";
+    }
 
     const result = await requestQuery(query);
 
@@ -19,27 +25,44 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-
 
 
   // Auxiliar function --------------------------------------------------------------------------------------------------
-  async function pagination(result) {
+  async function pagination(result) {    
+    try {
+      await resolvePtypePagesRecursive(result, firstPathConfig[platformConfig]);
 
-    await resolvePtypePagesRecursive(result, "repository");
-
-    const finalResultJSON = JSON.stringify(result, null, 2);
-
-    const nombreArchivo = 'finalResult.json';
+      const finalResultJSON = JSON.stringify(result, null, 2);
     
-    fs.writeFile(nombreArchivo, finalResultJSON, (err) => {
-      if (err) {
-        console.error('Error al escribir el archivo JSON:', err);
-      } else {
-        console.log(`El archivo ${nombreArchivo} ha sido creado exitosamente.`);
-      }
-    });
+      fs.writeFile('finalResult.json', finalResultJSON, (err) => {
+        if (err) {
+          console.error('Error al escribir el archivo JSON:', err);
+        } else {
+          console.log(`El archivo finalResult.json ha sido creado exitosamente.`);
+        }
+      });
+  
+      return result;
+    } catch (error) {
+      const originalResult = JSON.parse(await requestQuery(originalQuery));
 
-    return result;
+      const finalResultJSON = JSON.stringify(originalResult, null, 2);
+
+      
+      fs.writeFile('finalResult.json', finalResultJSON, (err) => {
+        if (err) {
+          console.error('Error al escribir el archivo JSON:', err);
+        } else {
+          console.log(`El archivo finalResult.json ha sido creado exitosamente.`);
+        }
+      });
+
+      console.error("Ocurrió un error:", error);
+      return originalResult;
+    }
   }
 
 
-  // Global variables -----------------------------------------------------------------------------------------------------
+
+
+  // Global variables -----------------------------------------------------------------------------------------------------  
   var originalQuery = "";
 
   var tokenPred = "";
@@ -48,6 +71,19 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-
 
   var lastVisitedIdByPtype = {};
 
+
+  // System configuration -------------------------------------------------------------------------------------------------
+  var platformConfig = "";
+
+  const firstPathConfig = {
+    github: "repository",
+    zenhub: "workspace"
+  };
+
+  const requestURLConfig = {
+    github: 'https://api.github.com/graphql',
+    zenhub: 'https://api.zenhub.com/public/graphql'
+  }
 
   // Recursive function --------------------------------------------------------------------------------------------------
   async function resolvePtypePagesRecursive(currentResult, rootAttribute) {
@@ -116,10 +152,10 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-
 
         var nextPageResultJSON = JSON.parse(nextPageResult);
 
-        var newGhostNodes = nextPageResultJSON.repository[ptypePath[ptypePath.length-1]].nodes;
+        var newGhostNodes = nextPageResultJSON[firstPathConfig[platformConfig]][ptypePath[ptypePath.length-1]].nodes;
 
-        if(nextPageResultJSON.repository[ptypePath[0]].pageInfo.hasNextPage){
-          cursorOfNextPage = nextPageResultJSON.repository[ptypePath[0]].pageInfo.endCursor;
+        if(nextPageResultJSON[firstPathConfig[platformConfig]][ptypePath[0]].pageInfo.hasNextPage){
+          cursorOfNextPage = nextPageResultJSON[firstPathConfig[platformConfig]][ptypePath[0]].pageInfo.endCursor;
         } else{
             hasNextPage = false;
         }
@@ -132,16 +168,26 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-
 
         var ptypeRuteString = "";
 
-        for(var i = 0; i<ptypePath.length-1;i++){
-          const lastElement = ptypePath[i];
-          const capitalizeFirstCharAndDeleteLastChar = lastElement.charAt(0).toUpperCase() + lastElement.slice(1, -1);
-          ptypeRuteString += capitalizeFirstCharAndDeleteLastChar;
+        if(platformConfig == "github"){
+          for(var i = 0; i<ptypePath.length-1;i++){
+            const lastElement = ptypePath[i];
+            const capitalizeFirstCharAndDeleteLastChar = lastElement.charAt(0).toUpperCase() + lastElement.slice(1, -1);
+            ptypeRuteString += capitalizeFirstCharAndDeleteLastChar;
+          }
+        } else if(platformConfig == "zenhub"){
+          if(ptypePath[ptypePath.length-2]=="repositoriesConnection"){
+            ptypeRuteString = "Repository"
+          } else{
+            const secondTolastElement = ptypePath[ptypePath.length-2];
+            const capitalizeFirstCharAndDeleteLastChar = secondTolastElement.charAt(0).toUpperCase() + secondTolastElement.slice(1, -1);
+            ptypeRuteString = capitalizeFirstCharAndDeleteLastChar;
+          }
         }
 
         var nodeId = lastVisitedIdByPtype[ptypePath[ptypePath.length-2]] // Second to last pageable type of the path
 
         var pathIncludingNodes = ptypePath.map(element => `${element}.nodes`).join(".")
-        var nodesProperties = jsonToGraphQLQuery(eval("originalQueryObj.query.repository."+pathIncludingNodes), { pretty: true });
+        var nodesProperties = jsonToGraphQLQuery(eval("originalQueryObj.query." + firstPathConfig[platformConfig] +"."+pathIncludingNodes), { pretty: true });
 
         var getNextPageQuery =     
         `query Get${ptypeRuteString}ById {
@@ -161,6 +207,9 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-
             }
           }
         }`
+        console.log(ptypePath)
+        console.log(lastVisitedIdByPtype)
+        console.log(getNextPageQuery)
 
         var nextPageResult = await requestQuery(getNextPageQuery);
 
@@ -184,11 +233,11 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-
 
   //  Request GQL query --------------------------------------------------------------------------------------------------
   async function requestQuery(query) {
-    const apiUrl = 'https://api.github.com/graphql';
+    const apiUrl = requestURLConfig[platformConfig];
     const requestConfig = {
       headers: {
         Authorization: `Bearer ${tokenPred}`,
-        Accept: 'application/vnd.github.starfox-preview+json',
+        Accept: 'application/json',
       },
     };
     try {
