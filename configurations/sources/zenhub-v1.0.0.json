@@ -1,0 +1,10 @@
+{
+    "id": "zenhub-v1.0.0",
+    "url": "https://api.zenhub.com/public/graphql",
+    "complexSubqueryPath": false, 
+    "firstLevelPtype": [],
+    "paths":{
+        "*.repositoriesConnection.*": "Repository",
+        "*.issues.*": "Issue"
+    }   
+}

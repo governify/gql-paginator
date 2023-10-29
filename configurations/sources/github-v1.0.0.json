@@ -1,0 +1,11 @@
+{
+    "id": "github-v1.0.0",
+    "url": "https://api.github.com/graphql",
+    "complexSubqueryPath": true, 
+    "firstLevelPtype": ["pullRequests","issues"],
+    "paths":{
+        "pullRequests.*": "PullRequest",
+        "issues.*": "Issue",
+        "pullRequests.reviews.*": "PullRequestReview"
+    }
+}
