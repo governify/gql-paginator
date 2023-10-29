@@ -20,6 +20,11 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-
 
     const result = await requestQuery(query);
 
+    if(result.includes("id") && result.includes("totalCount") && result.includes("hasNextPage") && result.includes("pageInfo")){
+      console.log("Returning query result without paginating because the query doesn't contain the elements required for pagination.")
+      return JSON.parse(result);
+    }
+
     return await pagination(JSON.parse(result));
   }
 
@@ -62,7 +67,7 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-
       });
 
       console.error("Error performing pagination:", error);
-      console.log("Returning query result without paginating.")
+      console.log("Returning query result without paginating due to error.")
       return originalResult;
     }
   }
@@ -276,7 +281,7 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-
       console.log('Available configurations: ');
       files.forEach((file) => {
         const filenameWithoutExtension = file.replace('.json', '');
-        console.log(filenameWithoutExtension);
+        console.log("- ",filenameWithoutExtension);
       });
     });
   }
