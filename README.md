@@ -22,7 +22,7 @@ await GQLPaginator(query, token, configuration);
 Parameters:
 -  **Query**: Add the query you need to paginate, and put it in quotes. Remember that to paginate you need to build a query that provides the information necessary to do so. [How to build a valid query for pagination?](https://github.com/governify/gql-paginator/tree/main#how-to-build-a-valid-query-for-pagination)
 -  **Token**: Your API token in quotes. You can find more information on how to generate a token on the page of the API you are using.
--  **Configuration**: The required pagination configuration of the API in use. You can use the [visualizeAllAvailableConfigurationsSource](https://github.com/governify/gql-paginator/tree/main#visualizeallavailableconfigurationssource) function to view all available settings. You can also create your own configuration or modify existing ones by following the [configuration creation and editing guide](https://github.com/governify/gql-paginator/tree/main#configuration-creation-and-editing-guide). Default configurations:
+-  **Configuration**: The required pagination configuration of the API in use. You can use the [visualizeAllAvailableConfigurationsSource](https://github.com/governify/gql-paginator/tree/main#visualizeallavailableconfigurationssource) function to view all available settings. You can also create your own configuration or modify existing ones by following the [configuration creation and editing guide](https://github.com/governify/gql-paginator/tree/main#configuration-creation-and-extend-guide). Default configurations:
     - github-v1.0.0
     - zenhub-v1.0.0
  ---
@@ -39,7 +39,7 @@ In order for pagination to be carried out, it is necessary to follow a series of
 - Query mustn't contains:
     - **after**
 
-### Configuration creation and editing guide
+### Configuration creation and extend guide
 The configuration chosen when calling the GQLPaginator function defines certain parameters that are necessary to know in order to paginate a result. This is due to the variability of GraphQL when generating subqueries. This section explains how to modify existing configurations or create a new one for an unsupported API.
 
 ### Creating a configuration
@@ -182,11 +182,61 @@ GQLPaginator(`{
   }
 }`, ${token}, 'github-v1.0.0')
 ```
-If you look at the query, pullRequests (paginable type) does not have the hasNextPage attribute within pageInfo, which was a mandatory requirement to be able to paginate. Therefore, pullRequests will not be paged, but the rest of the pageable types will be.
+If you look at the query, pullRequests (paginable type) does not have the hasNextPage attribute within pageInfo, which was a [mandatory requirement](https://github.com/governify/gql-paginator/tree/main#how-to-build-a-valid-query-for-pagination) to be able to paginate. Therefore, pullRequests will not be paged, but the rest of the pageable types will be. You can add hasNextPage attribute and you'll see how now the pagination is done in pullRequests.
 
+### zenhub-v1.0.0
+Change ${repository-id} to the repository name that you can find it in your board url:
+
+![Captura de pantalla 2023-10-31 093835](https://github.com/governify/gql-paginator/assets/100673872/78fdbdaf-f10a-45f8-94a8-0cf3c4946744)
+
+Change ${token} to your zenhub token.
+```
+GQLPaginator(`query {
+  workspace(id: "${repository-id}") {
+    repositoriesConnection(first: 10) {
+      nodes {
+        id
+        ghId
+        name
+        issues(first:5){
+           pageInfo{
+            hasNextPage
+            endCursor
+           }
+           totalCount
+           nodes{
+            id
+            title
+            timelineItems(first:10){
+              pageInfo{
+                hasNextPage
+                endCursor
+              }
+              totalCount
+              nodes{
+                id
+                data
+                key
+                updatedAt
+              }
+            }
+          }
+        }
+        owner {
+          login
+        }
+      }
+    }
+  }
+}`, ${token}, 'zenhub-v1.0.0')
+```
 ---
 ## Utils
 ### visualizeAllAvailableConfigurationsSource
+Use this function to view the available library configurations.
+```
+console.log(visualizeAllAvailableConfigurationsSource());
+```
 
 ## Design and architecture
 
