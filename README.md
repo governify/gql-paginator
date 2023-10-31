@@ -30,12 +30,17 @@ Parameters:
 ### How to build a valid query for pagination?
 In order for pagination to be carried out, it is necessary to follow a series of rules when building the query ([example](https://github.com/governify/gql-paginator/tree/main#examples)), which are listed below:
 - All pageable types must contains:
-  - **nodes**
-    - **id**
-  - **pageInfo**
-    - **hasNextPage**
-    - **endCursor**  
-  - **totalCount**
+```txt
+  nodes {
+    id
+  }
+  pageInfo {
+    hasNextPage
+    endCursor
+  }  
+  totalCount
+```
+
 - Query mustn't contains:
     - **after**
 
@@ -45,8 +50,9 @@ The configuration chosen when calling the GQLPaginator function defines certain 
 ### Creating a configuration
 (This requires studying how the GraphQL API you are using works)
 1. Go to your repository from opening the path node_modules/gql-paginator/configurations/sources
-2. Create a new configuration called: <api-name>-v1.0.0.json
+2. Create a new configuration called: "api-name"-v1.0.0.json
 3. Use this template to create a new API configuration
+
 ```
 {
     "id": "",
@@ -239,5 +245,12 @@ console.log(visualizeAllAvailableConfigurationsSource());
 ```
 
 ## Design and architecture
+The GQLPaginator function is a recursive function that follows the following flow:
 
+![gql-paginator-arquitecture (1)](https://github.com/governify/gql-paginator/assets/100673872/63e35411-4910-45f6-9927-d66287e02703)
+
+Assumptions: 
+- ARRAYS ONLY EXIST IN NODES, An array is not contemplated elsewhere
+- WHEN AN OBJECT HAS NODES AS A PROPERTY, IT IS CONSIDERED A PAGEABLE TYPE
+- PAGEABLE TYPES ARE NOT CONTEMPLATED IN A SIMPLE TYPE
 
