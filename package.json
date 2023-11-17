@@ -14,6 +14,9 @@
       "import": "./src/githubGQLPaginatorService.js"
     }
   },
+  "release": {
+    "branches": ["main"]
+  },
   "author": "Javier Fernández Castillo",
   "license": "MIT",
   "dependencies": {
