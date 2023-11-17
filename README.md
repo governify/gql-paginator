@@ -10,19 +10,19 @@ npm install gql-paginator
 ```
 3. Import the library in the js file in which you want to use the functions:
 ```
-import { GQLPaginator, visualizeAllAvailableConfigurationsSource } from 'github-gql-paginator';
+import { GQLPaginator } from 'github-gql-paginator';
 ```
 ---
 ## Usage
 ### GQLPaginator function
-This async function receives a query, a token, and a configuration, and returns the paginated result if possible or the non-paged result if not.
+This async function receives a query, a token, and a configuration, and returns the paginated result if possible or the non-paged result if not. [Result's examples](https://github.com/governify/gql-paginator/tree/main#examples)
 ```
-await GQLPaginator(query, token, configuration);
+result = await GQLPaginator(query, token, configuration);
 ```
 Parameters:
 -  **Query**: Add the query you need to paginate, and put it in quotes. Remember that to paginate you need to build a query that provides the information necessary to do so. [How to build a valid query for pagination?](https://github.com/governify/gql-paginator/tree/main#how-to-build-a-valid-query-for-pagination)
 -  **Token**: Your API token in quotes. You can find more information on how to generate a token on the page of the API you are using.
--  **Configuration**: The required pagination configuration of the API in use. You can use the [visualizeAllAvailableConfigurationsSource](https://github.com/governify/gql-paginator/tree/main#visualizeallavailableconfigurationssource) function to view all available settings. You can also create your own configuration or modify existing ones by following the [configuration creation and editing guide](https://github.com/governify/gql-paginator/tree/main#configuration-creation-and-extend-guide). Default configurations:
+-  **Configuration**: The required pagination configuration of the API in use. You can also create your own configuration or modify existing ones by following the [configuration creation and editing guide](https://github.com/governify/gql-paginator/tree/main#configuration-creation-and-extend-guide). Default configurations:
     - github-v1.0.0
     - zenhub-v1.0.0
  ---
@@ -190,6 +190,41 @@ GQLPaginator(`{
 ```
 If you look at the query, pullRequests (paginable type) does not have the hasNextPage attribute within pageInfo, which was a [mandatory requirement](https://github.com/governify/gql-paginator/tree/main#how-to-build-a-valid-query-for-pagination) to be able to paginate. Therefore, pullRequests will not be paged, but the rest of the pageable types will be. You can add hasNextPage attribute and you'll see how now the pagination is done in pullRequests.
 
+Obtained result:
+```json
+{
+  "data": {
+    "repository": {
+      "issues": {
+        "totalCount": 52,
+        "pageInfo": {
+          "hasNextPage": true,
+          "endCursor": "Y3Vyc29yOnYyOpHOYHBmyA=="
+        },
+        "nodes": [
+          {
+            "id": "I_kwDOI8VKA85e5OIH",
+            "title": "Task #2.6 Technical report and task diagram"
+          },
+          {
+            "id": "I_kwDOI8VKA85e5O3A",
+            "title": "Task #2.7 Methodologies management report"
+          },
+          {
+            "id": "I_kwDOI8VKA85e5QOJ",
+            "title": "Task #2.8 a) Pet hotel functionality"
+          },
+          {
+            "id": "I_kwDOI8VKA85e5Qt7",
+            "title": "Task #2.8 b) Web style"
+          },
+          {
+            "id": "I_kwDOI8VKA85e5RDZ",
+            "title": "Task #2.8 c) Add and edit veterinarians"
+          },
+          ...
+```
+
 ### zenhub-v1.0.0
 Change ${repository-id} to the repository name that you can find it in your board url:
 
@@ -236,13 +271,82 @@ GQLPaginator(`query {
   }
 }`, ${token}, 'zenhub-v1.0.0')
 ```
+
+Obtained result: 
+```json
+{
+  "data": {
+    "workspace": {
+      "repositoriesConnection": {
+        "nodes": [
+          {
+            "id": "Z2lkOi8vcmFwdG9yL1JlcG9zaXRvcnkvMTMzMzk2MDE4",
+            "ghId": 600132099,
+            "name": "psg2-2223-g6-63",
+            "issues": {
+              "pageInfo": {
+                "hasNextPage": true,
+                "endCursor": "WzI2MjAyMDU4NV0"
+              },
+              "totalCount": 76,
+              "nodes": [
+                {
+                  "id": "Z2lkOi8vcmFwdG9yL0lzc3VlLzI2MDg0ODA4NA",
+                  "title": "Task #2.9 Deployment",
+                  "timelineItems": {
+                    "pageInfo": {
+                      "hasNextPage": false,
+                      "endCursor": "MQ"
+                    },
+                    "totalCount": 1,
+                    "nodes": [
+                      {
+                        "id": "Z2lkOi8vcmFwdG9yL1RpbWVsaW5lSXRlbTo6SXNzdWVFc3RpbWF0ZUNoYW5nZWQvMTExNTc0MDA3",
+                        "data": {
+                          "github_user": {
+                            "id": 313464417,
+                            "gh_id": 100673872,
+                            "login": "JaviFdez7",
+                            "avatar_url": "https://avatars.githubusercontent.com/u/100673872?v=4"
+                          },
+                          "current_value": "2.0"
+                        },
+                        "key": "issue.set_estimate",
+                        "updatedAt": "2023-03-20T01:17:30Z"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "Z2lkOi8vcmFwdG9yL0lzc3VlLzI2MDg0ODA4Ng",
+                  "title": "Task #2.6 Technical report and task diagram",
+                  "timelineItems": {
+                    "pageInfo": {
+                      "hasNextPage": false,
+                      "endCursor": "MQ"
+                    },
+                    "totalCount": 1,
+                    "nodes": [
+                      {
+                        "id": "Z2lkOi8vcmFwdG9yL1RpbWVsaW5lSXRlbTo6SXNzdWVFc3RpbWF0ZUNoYW5nZWQvMTExMzk1NDM0",
+                        "data": {
+                          "github_user": {
+                            "id": 313464417,
+                            "gh_id": 100673872,
+                            "login": "JaviFdez7",
+                            "avatar_url": "https://avatars.githubusercontent.com/u/100673872?v=4"
+                          },
+                          "current_value": "8.0"
+                        },
+                        "key": "issue.set_estimate",
+                        "updatedAt": "2023-03-15T15:41:06Z"
+                      }
+                    ]
+                  }
+                },
+                ...
+```
 ---
-## Utils
-### visualizeAllAvailableConfigurationsSource
-Use this function to view the available library configurations.
-```
-console.log(visualizeAllAvailableConfigurationsSource());
-```
 
 ## Design and architecture
 The GQLPaginator function is a recursive function that follows the following flow:
@@ -250,7 +354,7 @@ The GQLPaginator function is a recursive function that follows the following flo
 ![gql-paginator-arquitecture (1)](https://github.com/governify/gql-paginator/assets/100673872/63e35411-4910-45f6-9927-d66287e02703)
 
 Assumptions: 
-- ARRAYS ONLY EXIST IN NODES, An array is not contemplated elsewhere
-- WHEN AN OBJECT HAS NODES AS A PROPERTY, IT IS CONSIDERED A PAGEABLE TYPE
-- PAGEABLE TYPES ARE NOT CONTEMPLATED IN A SIMPLE TYPE
+- Arrays only exist in nodes, an array is not contemplated elsewhere.
+- When an object has nodes as a property, it is considered a pageable type.
+- Pageable types are not contemplated in a simple type.
 
