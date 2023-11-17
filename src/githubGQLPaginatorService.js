@@ -2,25 +2,27 @@ import axios from 'axios';
 import fs from 'fs';
 import { graphQlQueryToJson } from 'graphql-query-to-json'; // npm install graphql-query-to-json
 import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-to-graphql-query
+import { fileURLToPath } from 'url';
+import * as path from 'path';
 
-  // Assumptions: ARRAYS ONLY EXIST IN NODES, An array is not contemplated elsewhere
-  // WHEN AN OBJECT HAS NODES AS A PROPERTY, IT IS CONSIDERED A PAGEABLE TYPE
-  // PAGEABLE TYPES ARE NOT CONTEMPLATED IN A SIMPLE TYPE
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
   // Public function --------------------------------------------------------------------------------------------------
-  export async function GQLPaginator(query, token, apiVersionConfig){
+  export async function GQLPaginator(query, token, apiVersionConfig){ //import { GQLPaginator, visualizeAllAvailableConfigurationsSource } from 'github-gql-paginator';
     tokenPred = token;
     originalQuery = query;
+    const configPath = path.resolve(__dirname, `../configurations/sources/${apiVersionConfig}.json`);
 
     try {
-      jsonConfigApiData = JSON.parse(fs.readFileSync(`../configurations/sources/${apiVersionConfig}.json`, 'utf8'));
+      jsonConfigApiData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     } catch (error) {
       throw new Error(`Non-existing API version configuration`);
     }
 
     const result = await requestQuery(query);
 
-    if(result.includes("id") && result.includes("totalCount") && result.includes("hasNextPage") && result.includes("pageInfo")){
+    if(originalQuery.includes('"id"') && originalQuery.includes('"totalCount"') && originalQuery.includes('"hasNextPage"') && originalQuery.includes('"pageInfo"') && !originalQuery.includes('"after"')){
       console.log("Returning query result without paginating because the query doesn't contain the elements required for pagination.")
       return JSON.parse(result);
     }
@@ -49,7 +51,8 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-
         } else {
           console.log(`The finalResult.json file has been created with the generated result.`);
         }
-      });
+      }); //Generate a file with the result
+
       console.log("Pagination done correctly.")
       return result;
     } catch (error) {
@@ -64,7 +67,7 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-
         } else {
           console.log(`The finalResult.json file has been created with the generated result..`);
         }
-      });
+      }); ////Generate a file with the result
 
       console.error("Error performing pagination:", error);
       console.log("Returning query result without paginating due to error.")
@@ -272,16 +275,4 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-
     } catch (error) {
       throw new Error(`Error in the api request (${jsonConfigApiData.url}): your query, apiUrl or token are wrong`);
     }
-  }
-
-
-  // Utils --------------------------------------------------------------------------------------------------
-  export function visualizeAllAvailableConfigurationsSource() {
-    fs.readdir("../configurations/sources", (error, files) => {
-      console.log('Available configurations: ');
-      files.forEach((file) => {
-        const filenameWithoutExtension = file.replace('.json', '');
-        console.log("- ",filenameWithoutExtension);
-      });
-    });
   }
