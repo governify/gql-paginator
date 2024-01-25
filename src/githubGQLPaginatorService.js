@@ -1,18 +1,20 @@
-import axios from 'axios';
-import fs from 'fs';
-import { graphQlQueryToJson } from 'graphql-query-to-json'; // npm install graphql-query-to-json
-import { jsonToGraphQLQuery } from 'json-to-graphql-query'; // npm install json-to-graphql-query
-import { fileURLToPath } from 'url';
-import * as path from 'path';
+const axios = require('axios');
+const fs = require('fs');
+const { graphQlQueryToJson } = require('graphql-query-to-json');
+const { jsonToGraphQLQuery } = require('json-to-graphql-query');
+const path = require('path');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Inicializar la variable _dirname
+const _dirname = __dirname;
+const _filename = path.resolve(_dirname, 'githubGQLPaginatorService.js');
+
+module.exports = { GQLPaginator };
 
   // Public function --------------------------------------------------------------------------------------------------
-  export async function GQLPaginator(query, token, apiVersionConfig){ //import { GQLPaginator, visualizeAllAvailableConfigurationsSource } from 'github-gql-paginator';
+  async function GQLPaginator(query, token, apiVersionConfig){ //import { GQLPaginator } from 'gql-paginator';
     tokenPred = token;
     originalQuery = query;
-    const configPath = path.resolve(__dirname, `../configurations/sources/${apiVersionConfig}.json`);
+    const configPath = path.resolve(_dirname, `../configurations/sources/${apiVersionConfig}.json`);
 
     try {
       jsonConfigApiData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -276,3 +278,4 @@ const __dirname = path.dirname(__filename);
       throw new Error(`Error in the api request (${jsonConfigApiData.url}): your query, apiUrl or token are wrong`);
     }
   }
+

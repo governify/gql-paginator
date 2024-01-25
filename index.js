@@ -1,45 +1,97 @@
-import { GQLPaginator } from './src/githubGQLPaginatorService.js';
-import dotenv from 'dotenv';
+const { GQLPaginator } = require('./src/githubGQLPaginatorService.js');
+const dotenv = require('dotenv');
 
 dotenv.config();
+
+module.exports = { GQLPaginator };
 
 const zenhubToken = process.env.ZH_TOKEN
 const githubToken = process.env.GH_TOKEN
 
-console.log(await GQLPaginator(`query {
-  workspace(id: "6408a9afdf53d5002e65f699") {
-    repositoriesConnection(first: 10) {
-      nodes {
-        id
-        ghId
-        name
-        issues(first:5){
-           pageInfo{
+async function fetchData() {
+  try {
+    const result = await GQLPaginator(`{
+      repository(name: "psg2-2223-g6-63", owner:"gii-is-psg2") {
+        issues(first: 25) {
+          totalCount
+          pageInfo {
             hasNextPage
             endCursor
-           }
-           totalCount
-           nodes{
+          }
+          nodes {
             id
             title
-            timelineItems(first:10){
-              pageInfo{
+          }
+        }
+        pullRequests(first: 10, states: MERGED) {
+          totalCount
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+          nodes {
+            id
+            state
+            title
+            body
+            baseRefName
+            headRefName
+            createdAt
+            author {
+              login
+            }
+            mergedAt
+            mergedBy {
+              login
+            }
+            reviews(first: 1) {
+              totalCount
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
+              nodes {
+                id
+                createdAt
+                state
+                reactions (first: 1) {
+                  totalCount
+                  pageInfo {
+                    hasNextPage
+                    endCursor 
+                  }
+                  nodes {
+                    content
+                    id
+                    user{
+                      name
+                    }
+                  }
+                }
+              }
+            }
+            assignees(first: 1){
+              pageInfo {
+                hasNextPage
                 endCursor
               }
               totalCount
               nodes{
                 id
-                data
-                key
-                updatedAt
+                name
               }
             }
           }
         }
-        owner {
-          login
-        }
       }
     }
+  `, githubToken, 'github-v1.0.0');
+
+    console.log(result);
+  } catch (error) {
+    console.error('Error:', error);
   }
-}`, zenhubToken, 'zenhub-v1.0.0'));
+}
+
+// Llama a la función para ejecutar el código
+fetchData();
