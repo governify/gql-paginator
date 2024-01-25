@@ -46,14 +46,15 @@ module.exports = { GQLPaginator };
       await resolvePtypePagesRecursive(result, firstPath);
 
       const finalResultJSON = JSON.stringify(result, null, 2);
-    
-      fs.writeFile('finalResult.json', finalResultJSON, (err) => {
-        if (err) {
-          console.error('Error writing JSON file:', err);
-        } else {
-          console.log(`The finalResult.json file has been created with the generated result.`);
-        }
-      }); //Generate a file with the result
+      
+      if(false)
+        fs.writeFile('finalResult.json', finalResultJSON, (err) => {
+          if (err) {
+            console.error('Error writing JSON file:', err);
+          } else {
+            console.log(`The finalResult.json file has been created with the generated result.`);
+          }
+        }); //Generate a file with the result
 
       console.log("Pagination done correctly.")
       return result;
@@ -62,14 +63,14 @@ module.exports = { GQLPaginator };
 
       const finalResultJSON = JSON.stringify(originalResult, null, 2);
 
-      
-      fs.writeFile('finalResult.json', finalResultJSON, (err) => {
-        if (err) {
-          console.error('Error writing JSON file:', err);
-        } else {
-          console.log(`The finalResult.json file has been created with the generated result..`);
-        }
-      }); ////Generate a file with the result
+      if(false)
+        fs.writeFile('finalResult.json', finalResultJSON, (err) => {
+          if (err) {
+            console.error('Error writing JSON file:', err);
+          } else {
+            console.log(`The finalResult.json file has been created with the generated result..`);
+          }
+        }); ////Generate a file with the result
 
       console.error("Error performing pagination:", error);
       console.log("Returning query result without paginating due to error.")
