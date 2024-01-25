@@ -13,10 +13,10 @@
       steps:
         - uses: actions/checkout@v2
 
-        - name: Use Node.js 20.6.1
+        - name: Use Node.js 20.8.1
           uses: actions/setup-node@v4  # v4 es una versión más reciente que incluye Node.js 20.6.1
           with:
-            node-version: '20.6.1'
+            node-version: '20.8.1'
 
         - name: Set up environment variables
           run: |
@@ -38,10 +38,10 @@
         - name: Checkout repository
           uses: actions/checkout@v2
 
-        - name: Use Node.js 20.6.1
+        - name: Use Node.js 20.8.1
           uses: actions/setup-node@v4
           with:
-            node-version: '20.6.1'
+            node-version: '20.8.1'
 
         - name: Set up environment variables
           run: |
