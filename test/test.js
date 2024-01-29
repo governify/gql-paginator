@@ -80,6 +80,6 @@ describe('Github test', () => {
         }
       }
     }`, githubToken, 'github-v1.0.0');
-    assert.strictEqual(result2.repository.issues.nodes.length, result2.repository.issues.totalCount);
+    assert.strictEqual(result2.data.repository.issues.nodes.length, result2.data.repository.issues.totalCount);
   }).timeout(60000);
 });

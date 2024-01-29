@@ -10,7 +10,7 @@ npm install gql-paginator
 ```
 3. Import the library in the js file in which you want to use the functions:
 ```
-import { GQLPaginator } from 'github-gql-paginator';
+const { GQLPaginator } = require('gql-paginator');
 ```
 ---
 ## Usage

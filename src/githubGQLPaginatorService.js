@@ -4,14 +4,13 @@ const { graphQlQueryToJson } = require('graphql-query-to-json');
 const { jsonToGraphQLQuery } = require('json-to-graphql-query');
 const path = require('path');
 
-// Inicializar la variable _dirname
 const _dirname = __dirname;
 const _filename = path.resolve(_dirname, 'githubGQLPaginatorService.js');
 
 module.exports = { GQLPaginator };
 
   // Public function --------------------------------------------------------------------------------------------------
-  async function GQLPaginator(query, token, apiVersionConfig){ //import { GQLPaginator } from 'gql-paginator';
+  async function GQLPaginator(query, token, apiVersionConfig){ // const { GQLPaginator } = require('gql-paginator');
     tokenPred = token;
     originalQuery = query;
     const configPath = path.resolve(_dirname, `../configurations/sources/${apiVersionConfig}.json`);
@@ -38,11 +37,17 @@ module.exports = { GQLPaginator };
     try {
 
       const properties = []
-      for (const property in result) { // Collect all keys from the result
+      for (const property in result) { // Collect all first keys from the result
+        properties.push(property);
+      }
+
+      for (const property in result[properties[0]]) { // Collect all second keys from the result
         properties.push(property);
       }
 
       firstPath = properties[0];
+      secondPath = properties[1];
+
       await resolvePtypePagesRecursive(result, firstPath);
 
       const finalResultJSON = JSON.stringify(result, null, 2);
@@ -92,11 +97,13 @@ module.exports = { GQLPaginator };
 
   var firstPath = "";
 
+  var secondPath = "";
+
   var jsonConfigApiData;
 
   // Recursive function --------------------------------------------------------------------------------------------------
   async function resolvePtypePagesRecursive(currentResult, rootAttribute) {
-      
+
     const properties = []
     for (const property in currentResult) { // Collect all keys from the result
       if(property!=="pageInfo" && property!=="totalCount" && typeof currentResult[property]!=="string" || property=="id")
@@ -161,10 +168,10 @@ module.exports = { GQLPaginator };
 
         var nextPageResultJSON = JSON.parse(nextPageResult);
 
-        var newGhostNodes = nextPageResultJSON[firstPath][ptypePath[ptypePath.length-1]].nodes;
+        var newGhostNodes = nextPageResultJSON[firstPath][secondPath][ptypePath[ptypePath.length-1]].nodes;
 
-        if(nextPageResultJSON[firstPath][ptypePath[0]].pageInfo.hasNextPage){
-          cursorOfNextPage = nextPageResultJSON[firstPath][ptypePath[0]].pageInfo.endCursor;
+        if(nextPageResultJSON[firstPath][secondPath][ptypePath[0]].pageInfo.hasNextPage){
+          cursorOfNextPage = nextPageResultJSON[firstPath][secondPath][ptypePath[0]].pageInfo.endCursor;
         } else{
             hasNextPage = false;
         }
@@ -180,7 +187,7 @@ module.exports = { GQLPaginator };
         var nodeId = lastVisitedIdByPtype[ptypePath[ptypePath.length-2]] // Second to last pageable type of the path
 
         var pathIncludingNodes = ptypePath.map(element => `${element}.nodes`).join(".")
-        var nodesProperties = jsonToGraphQLQuery(eval("originalQueryObj.query." + firstPath +"."+pathIncludingNodes), { pretty: true });
+        var nodesProperties = jsonToGraphQLQuery(eval("originalQueryObj.query." + secondPath +"."+pathIncludingNodes), { pretty: true });
 
         var getNextPageQuery =     
         `query Get${ptypePathString}ById {
@@ -205,10 +212,10 @@ module.exports = { GQLPaginator };
 
         var nextPageResultJSON = JSON.parse(nextPageResult);
 
-        var newGhostNodes = nextPageResultJSON.node[ptypePath[ptypePath.length-1]].nodes;
+        var newGhostNodes = nextPageResultJSON[firstPath].node[ptypePath[ptypePath.length-1]].nodes;
 
-        if(nextPageResultJSON.node[ptypePath[ptypePath.length-1]].pageInfo.hasNextPage){
-          cursorOfNextPage = nextPageResultJSON.node[ptypePath[ptypePath.length-1]].pageInfo.endCursor;
+        if(nextPageResultJSON[firstPath].node[ptypePath[ptypePath.length-1]].pageInfo.hasNextPage){
+          cursorOfNextPage = nextPageResultJSON[firstPath].node[ptypePath[ptypePath.length-1]].pageInfo.endCursor;
         } else{
           hasNextPage = false;
         }
@@ -263,7 +270,7 @@ module.exports = { GQLPaginator };
       const result = await axios.post(apiUrl, { query }, requestConfig);
 
       if (result.status === 200) {
-        const responseData = result.data.data;
+        const responseData = result.data;
 
         if (!responseData) {
           throw new Error(`Error in the api request (${jsonConfigApiData.url}): Repository not found`);
