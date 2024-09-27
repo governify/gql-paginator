@@ -24,7 +24,7 @@ module.exports = { GQLPaginator };
     const result = await requestQuery(query);
 
     if(originalQuery.includes('"id"') && originalQuery.includes('"totalCount"') && originalQuery.includes('"hasNextPage"') && originalQuery.includes('"pageInfo"') && !originalQuery.includes('"after"')){
-      console.log("Returning query result without paginating because the query doesn't contain the elements required for pagination.")
+      //console.log("Returning query result without paginating because the query doesn't contain the elements required for pagination.")
       return JSON.parse(result);
     }
 
@@ -61,7 +61,7 @@ module.exports = { GQLPaginator };
           }
         }); //Generate a file with the result
 
-      console.log("Pagination done correctly.")
+      //console.log("Pagination done correctly.")
       return result;
     } catch (error) {
       const originalResult = JSON.parse(await requestQuery(originalQuery));
@@ -77,8 +77,8 @@ module.exports = { GQLPaginator };
           }
         }); ////Generate a file with the result
 
-      console.error("Error performing pagination:", error);
-      console.log("Returning query result without paginating due to error.")
+      //console.error("Error performing pagination:", error);
+      //console.log("Returning query result without paginating due to error.")
       return originalResult;
     }
   }
