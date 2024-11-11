@@ -1,9 +1,8 @@
-const { GQLPaginator } = require('../src/githubGQLPaginatorService.js');
+const { GQLPaginator } = require('../src/GQLPaginatorService.js');
 const assert = require('assert');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const zenhubToken = process.env.ZH_TOKEN
 const githubToken = process.env.GH_TOKEN
 
 describe('Github test', () => {

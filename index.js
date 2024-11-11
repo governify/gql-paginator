@@ -1,4 +1,4 @@
-const { GQLPaginator } = require('./src/githubGQLPaginatorService.js');
+const { GQLPaginator } = require('./src/GQLPaginatorService.js');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -7,11 +7,13 @@ module.exports = { GQLPaginator };
 
 const zenhubToken = process.env.ZH_TOKEN
 const githubToken = process.env.GH_TOKEN
-const execTest = false;
+const execTest = true;
 
 async function fetchData() {
   try {
-    const result = await GQLPaginator(`{
+    const result = await GQLPaginator(null, githubToken, 'SQP-githubProjectQueries-inProgressIssuesPaginator', {repository: "psg2-2223-g6-63", owner: "gii-is-psg2"})
+
+    /*const result = await GQLPaginator(`{
       repository(name: "psg2-2223-g6-63", owner:"gii-is-psg2") {
         issues(first: 25) {
           totalCount
@@ -86,7 +88,7 @@ async function fetchData() {
         }
       }
     }
-  `, githubToken, 'github-v1.0.0');
+  `, githubToken, 'github-v1.0.0', null);*/
 
     console.log(result);
   } catch (error) {

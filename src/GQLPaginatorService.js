@@ -1,41 +1,49 @@
-const axios = require('axios');
 const fs = require('fs');
 const { graphQlQueryToJson } = require('graphql-query-to-json');
 const { jsonToGraphQLQuery } = require('json-to-graphql-query');
 const path = require('path');
 
 const _dirname = __dirname;
-const _filename = path.resolve(_dirname, 'githubGQLPaginatorService.js');
+const _filename = path.resolve(_dirname, 'GQLPaginatorService.js');
+
+const { resolveSpecificQueryPaginator } = require('./specificQueryPaginator/redirector.js');
+const { requestQuery } = require('./utils.js');
+
 
 module.exports = { GQLPaginator };
 
   // Public function --------------------------------------------------------------------------------------------------
-  async function GQLPaginator(query, token, apiVersionConfig){ // const { GQLPaginator } = require('gql-paginator');
+  async function GQLPaginator(query, token, apiVersionConfig, config){ // const { GQLPaginator } = require('gql-paginator');
     tokenPred = token;
     originalQuery = query;
-    const configPath = path.resolve(_dirname, `../configurations/sources/${apiVersionConfig}.json`);
 
-    try {
-      jsonConfigApiData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    } catch (error) {
-      throw new Error(`Non-existing API version configuration`);
+    if(!apiVersionConfig.includes("SQP") && query != null){ // Automatic paginator
+      const configPath = path.resolve(_dirname, `../configurations/sources/${apiVersionConfig}.json`);
+
+      try {
+        jsonConfigApiData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      } catch (error) {
+        throw new Error(`Non-existing API version configuration`);
+      }
+
+      const result = await requestQuery(query, jsonConfigApiData.url, tokenPred);
+
+      if(originalQuery.includes('"id"') && originalQuery.includes('"totalCount"') && originalQuery.includes('"hasNextPage"') && originalQuery.includes('"pageInfo"') && !originalQuery.includes('"after"')){
+        //console.log("Returning query result without paginating because the query doesn't contain the elements required for pagination.")
+        return JSON.parse(result);
+      }
+
+      return await paginator(JSON.parse(result));
+    } else { // Specific query paginator
+      const result = await resolveSpecificQueryPaginator(token, apiVersionConfig, config)
+      return result;
     }
-
-    const result = await requestQuery(query);
-
-    if(originalQuery.includes('"id"') && originalQuery.includes('"totalCount"') && originalQuery.includes('"hasNextPage"') && originalQuery.includes('"pageInfo"') && !originalQuery.includes('"after"')){
-      //console.log("Returning query result without paginating because the query doesn't contain the elements required for pagination.")
-      return JSON.parse(result);
-    }
-
-    return await pagination(JSON.parse(result));
-  }
+  } 
 
 
   // Auxiliar function --------------------------------------------------------------------------------------------------
-  async function pagination(result) {    
+  async function paginator(result) {    
     try {
-
       const properties = []
       for (const property in result) { // Collect all first keys from the result
         properties.push(property);
@@ -64,7 +72,7 @@ module.exports = { GQLPaginator };
       //console.log("Pagination done correctly.")
       return result;
     } catch (error) {
-      const originalResult = JSON.parse(await requestQuery(originalQuery));
+      const originalResult = JSON.parse(await requestQuery(originalQuery, jsonConfigApiData.url, tokenPred));
 
       const finalResultJSON = JSON.stringify(originalResult, null, 2);
 
@@ -164,7 +172,7 @@ module.exports = { GQLPaginator };
       var getNextPageQuery = originalQuery.replace(new RegExp(`${ptypePath[0]}\\(`, 'g'), `${ptypePath[0]}(after: "#NEWCURSOR#", `);
       while(hasNextPage){
 
-        var nextPageResult = await requestQuery(getNextPageQuery.replace(/#NEWCURSOR#/g, cursorOfNextPage))
+        var nextPageResult = await requestQuery(getNextPageQuery.replace(/#NEWCURSOR#/g, cursorOfNextPage), jsonConfigApiData.url, tokenPred)
 
         var nextPageResultJSON = JSON.parse(nextPageResult);
 
@@ -194,7 +202,7 @@ module.exports = { GQLPaginator };
           node(id: \"${nodeId}\") { 
             ... on ${ptypePathString} {
               id
-              ${ptypePath[ptypePath.length-1]}(first: 1, after: \"${cursorOfNextPage}\"){
+              ${ptypePath[ptypePath.length-1]}(first: 100, after: \"${cursorOfNextPage}\"){
                 pageInfo {
                   hasNextPage
                   endCursor
@@ -208,7 +216,7 @@ module.exports = { GQLPaginator };
           }
         }`
 
-        var nextPageResult = await requestQuery(getNextPageQuery);
+        var nextPageResult = await requestQuery(getNextPageQuery, jsonConfigApiData.url, tokenPred);
 
         var nextPageResultJSON = JSON.parse(nextPageResult);
 
@@ -256,34 +264,4 @@ module.exports = { GQLPaginator };
     return ptypePathString;
   }
   
-  
-  //  Request GQL query --------------------------------------------------------------------------------------------------
-  async function requestQuery(query) {
-    const apiUrl = jsonConfigApiData.url;
-    const requestConfig = {
-      headers: {
-        Authorization: `Bearer ${tokenPred}`,
-        Accept: 'application/json',
-      },
-    };
-    try {
-      const result = await axios.post(apiUrl, { query }, requestConfig);
-
-      if (result.status === 200) {
-        const responseData = result.data;
-
-        if (!responseData) {
-          throw new Error(`Error in the api request (${jsonConfigApiData.url}): Repository not found`);
-        }
-
-        const repositoryJSON = JSON.stringify(responseData);
-
-        return repositoryJSON;
-      } else {
-        throw new Error(`Error in the api request (${jsonConfigApiData.url}): ${result.status}`);
-      }
-    } catch (error) {
-      throw new Error(`Error in the api request (${jsonConfigApiData.url}): your query, apiUrl or token are wrong`);
-    }
-  }
 
