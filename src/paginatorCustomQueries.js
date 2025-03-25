@@ -46,11 +46,15 @@ async function resolveSubquery(data, subqueryOptions, url, token, currentPath) {
 }
 
 async function resolvePagination(node, subqueryOptions, url, token) {
-    if(node[subqueryOptions.pathTarget].pageInfo.hasNextPage){
-        subqueryOptions.query = subqueryOptions.query.replace('%node.id%', currentId).replace('%pageinfo.endcursor%', node[subqueryOptions.pathTarget].pageInfo.endCursor);
+    let actualPage = node[subqueryOptions.pathTarget].pageInfo;
+    let subqueryTemplate = subqueryOptions.query;
+    while(actualPage.hasNextPage){
+        subqueryOptions.query = subqueryTemplate;
+        subqueryOptions.query = subqueryOptions.query.replace('%node.id%', currentId).replace('%pageinfo.endcursor%', actualPage.endCursor);
         let result = await requestQuery(subqueryOptions.query, url, token);
         result = JSON.parse(result);
         node[subqueryOptions.pathTarget].nodes.push(...result.data.node[subqueryOptions.pathTarget].nodes);
+        actualPage = result.data.node[subqueryOptions.pathTarget].pageInfo;
     }
     return
 }
