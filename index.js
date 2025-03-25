@@ -7,7 +7,7 @@ module.exports = { GQLPaginator };
 
 const zenhubToken = process.env.ZH_TOKEN
 const githubToken = process.env.GH_TOKEN
-const execTest = true;
+const execTest = false;
 
 async function fetchData() {
   try {
