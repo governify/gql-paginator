@@ -6,36 +6,35 @@ const path = require('path');
 const _dirname = __dirname;
 const _filename = path.resolve(_dirname, 'GQLPaginatorService.js');
 
-const { resolveSpecificQueryPaginator } = require('./specificQueryPaginator/redirector.js');
+const { paginatorCustomQueries } = require('./paginatorCustomQueries.js');
 const { requestQuery } = require('./utils.js');
 
 
 module.exports = { GQLPaginator };
 
   // Public function --------------------------------------------------------------------------------------------------
-  async function GQLPaginator(query, token, apiVersionConfig, config){ // const { GQLPaginator } = require('gql-paginator');
+  async function GQLPaginator(query, token, apiVersionConfig){ // const { GQLPaginator } = require('gql-paginator');
     tokenPred = token;
     originalQuery = query;
 
-    if(!apiVersionConfig.includes("SQP") && query != null){ // Automatic paginator
-      const configPath = path.resolve(_dirname, `../configurations/sources/${apiVersionConfig}.json`);
+    const configPath = path.resolve(_dirname, `../configurations/sources/${apiVersionConfig}.json`);
 
-      try {
-        jsonConfigApiData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      } catch (error) {
-        throw new Error(`Non-existing API version configuration`);
-      }
+    try {
+      jsonConfigApiData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    } catch (error) {
+      throw new Error(`Non-existing API version configuration`);
+    }
 
+    if(!query.subqueries){ // Automatic Paginator
       const result = await requestQuery(query, jsonConfigApiData.url, tokenPred);
 
       if(originalQuery.includes('"id"') && originalQuery.includes('"totalCount"') && originalQuery.includes('"hasNextPage"') && originalQuery.includes('"pageInfo"') && !originalQuery.includes('"after"')){
-        //console.log("Returning query result without paginating because the query doesn't contain the elements required for pagination.")
         return JSON.parse(result);
       }
 
       return await paginator(JSON.parse(result));
-    } else { // Specific query paginator
-      const result = await resolveSpecificQueryPaginator(token, apiVersionConfig, config)
+    } else { // Paginator Custom Queries
+      const result = await paginatorCustomQueries(query, token, jsonConfigApiData);
       return result;
     }
   } 
@@ -68,8 +67,6 @@ module.exports = { GQLPaginator };
             console.log(`The finalResult.json file has been created with the generated result.`);
           }
         }); //Generate a file with the result
-
-      //console.log("Pagination done correctly.")
       return result;
     } catch (error) {
       const originalResult = JSON.parse(await requestQuery(originalQuery, jsonConfigApiData.url, tokenPred));
@@ -85,8 +82,6 @@ module.exports = { GQLPaginator };
           }
         }); ////Generate a file with the result
 
-      //console.error("Error performing pagination:", error);
-      //console.log("Returning query result without paginating due to error.")
       return originalResult;
     }
   }
