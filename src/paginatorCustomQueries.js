@@ -5,12 +5,17 @@ module.exports = { paginatorCustomQueries };
 async function paginatorCustomQueries(queryOptions, token, apiConfig) {
     let initialData = await requestQuery(queryOptions.initialQuery, apiConfig.url, token);
     initialData = JSON.parse(initialData);
-    for(const subqueryOptions of queryOptions.subqueries) {
-        subqueryOptions.pathItemId = getNthFromEndInPath(subqueryOptions.insertResultAtPath, 4);
-        subqueryOptions.pathTarget = getNthFromEndInPath(subqueryOptions.insertResultAtPath, 2);
-        await resolveSubquery(initialData, subqueryOptions, apiConfig.url, token, null);
+
+    try {
+        for(const subqueryOptions of queryOptions.subqueries) {
+            subqueryOptions.pathItemId = getNthFromEndInPath(subqueryOptions.insertResultAtPath, 4);
+            subqueryOptions.pathTarget = getNthFromEndInPath(subqueryOptions.insertResultAtPath, 2);
+            await resolveSubquery(initialData, subqueryOptions, apiConfig.url, token, null);
+        }
+        return initialData;
+    } catch (error) {
+        return initialData
     }
-    return initialData;
 }
 
 let currentId;
