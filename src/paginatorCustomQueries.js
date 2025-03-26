@@ -21,6 +21,7 @@ async function paginatorCustomQueries(queryOptions, token, apiConfig) {
         }
         return initialData;
     } catch (error) {
+        console.log(error);
         return initialData
     }
 }
