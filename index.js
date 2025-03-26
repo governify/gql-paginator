@@ -98,6 +98,16 @@ async function fetchData() {
     }
   `;
 
+  let query3= {
+    initialQuery:"{\r\n  repository(owner: \"gii-is-psg2\", name: \"psg2-2425-g8-83\") {\r\n  id  pullRequests(first: 10, states: MERGED) {\r\n      totalCount\r\n      pageInfo{\r\n        endCursor\r\n        hasNextPage\r\n      }\r\n      nodes {\r\n        id\r\n        state\r\n        title\r\n        body\r\n        baseRefName\r\n        headRefName\r\n        createdAt\r\n        author {\r\n          login\r\n        }\r\n        mergedAt\r\n        mergedBy {\r\n          login\r\n        }\r\n        reviews(first: 10) {\r\n          totalCount\r\n          nodes {\r\n            createdAt\r\n            state\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}" ,
+    subqueries:[
+          {
+              "query": "{\r\n  repository(owner: \"gii-is-psg2\", name: \"psg2-2425-g8-83\") {\r\n  id  pullRequests(first: 30, states: MERGED, after:\"%pageinfo.endcursor%\") {\r\n      totalCount\r\n      pageInfo{\r\n        endCursor\r\n        hasNextPage\r\n      }\r\n      nodes {\r\n        id\r\n        state\r\n        title\r\n        body\r\n        baseRefName\r\n        headRefName\r\n        createdAt\r\n        author {\r\n          login\r\n        }\r\n        mergedAt\r\n        mergedBy {\r\n          login\r\n        }\r\n        reviews(first: 10) {\r\n          totalCount\r\n          nodes {\r\n            createdAt\r\n            state\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}",
+              "insertResultAtPath": "repository.pullRequests.nodes"
+          }
+      ]
+  }
+
     const result = await GQLPaginator(query, githubToken, 'github-v1.0.0');
 
     console.log(result);
